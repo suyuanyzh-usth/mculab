@@ -147,6 +147,11 @@ function fillPresets() {
 }
 
 /* ================================================================ 渲染 */
+/*
+ * 整图重绘：重建 SVG + 刷新诊断/网络/统计面板。
+ * 开销随元件数量线性增长，因此**拖拽过程中不调用它**，
+ * 拖动时走 paintDrag() 做增量更新，松手才回到这里。
+ */
 function render() {
   if (!sch) return;
   sch.refresh();
@@ -156,6 +161,47 @@ function render() {
   renderDiag();
   renderNets();
   renderCounts();
+}
+
+/*
+ * 拖拽中的增量绘制：只改"被拖元件"的 transform 与"相连导线"的 points，
+ * 不重建 DOM、不重算净表、不刷新侧栏。这是消除拖拽卡顿的关键。
+ */
+function paintDrag(partIds, wireIds) {
+  for (const id of partIds) {
+    const p = sch.parts.find(x => x.id === id);
+    const o = drag && drag.orig.get(id);
+    const el = drag && drag.els.get(id);
+    if (!p || !o || !el) continue;
+    el.setAttribute('transform', `translate(${(p.x - o.x) * GRID},${(p.y - o.y) * GRID})`);
+  }
+  paintWires(wireIds);
+}
+
+/** 单条导线 + 它的拐点手柄一起重画（拖动导线时用） */
+function paintWireWithHandles(wid) {
+  paintWires([wid]);
+  const w = sch.wires.find(x => x.id === wid);
+  if (!w) return;
+  for (const c of root.querySelectorAll(`circle[data-vertex][data-wire="${wid}"]`)) {
+    const v = w.vertices[Number(c.dataset.vertex)];
+    if (v) { c.setAttribute('cx', v.x * GRID); c.setAttribute('cy', v.y * GRID); }
+  }
+}
+
+function paintWires(wireIds) {
+  for (const wid of wireIds) {
+    const w = sch.wires.find(x => x.id === wid);
+    if (!w) continue;
+    const pts = w.vertices.map(v => `${v.x * GRID},${v.y * GRID}`).join(' ');
+    for (const el of root.querySelectorAll(`polyline[data-wire="${wid}"]`)) el.setAttribute('points', pts);
+  }
+}
+
+/** 与给定元件相连的导线 id（用于拖拽时同步重画） */
+function wiresOf(partIds) {
+  const set = new Set(partIds);
+  return sch.wires.filter(w => w.vertices.some(v => v.comp && set.has(v.comp))).map(w => w.id);
 }
 
 function applyVB() {
@@ -407,6 +453,10 @@ function bindCanvas() {
           const p = sch.parts.find(x => x.id === id); return [id, { x: p.x, y: p.y }];
         })), moved: false
       };
+      // 缓存被拖元件与相连导线的 DOM 引用，拖动时只改这些节点（见 paintDrag）
+      drag.els = new Map();
+      for (const id of drag.ids) drag.els.set(id, root.querySelector(`g.part[data-part="${id}"]`));
+      drag.wireIds = wiresOf(drag.ids);
       svg.setPointerCapture(e.pointerId);
       return;
     }
@@ -466,9 +516,9 @@ function bindCanvas() {
         if (clash) { p.x = o.x; p.y = o.y; setStatus('移动受阻：元件不可重叠', 'warn'); }
       }
       sch.rebindWireEndpoints(drag.ids);
-      sch.refresh();
       drag.moved = true;
-      render();
+      // 关键：拖动过程中只做增量绘制（改 transform / points），不重建整图
+      paintDrag(drag.ids, drag.wireIds);
       return;
     }
 
@@ -484,9 +534,8 @@ function bindCanvas() {
       v.x = nx; v.y = ny;
       // 用户亲手拖过这个拐点后，就不再让它自动跟随（交还给人工）
       if (v.auto) v.auto = false;
-      sch.refresh();
       drag.moved = true;
-      render();
+      paintWireWithHandles(drag.wireId);
       return;
     }
 
@@ -500,9 +549,8 @@ function bindCanvas() {
         const v = w.vertices[i];
         if (v && !v.comp) { v.x = o.x + dx; v.y = o.y + dy; }
       }
-      sch.refresh();
       drag.moved = true;
-      render();
+      paintWireWithHandles(drag.wireId);
       return;
     }
   });
@@ -510,6 +558,8 @@ function bindCanvas() {
   svg.addEventListener('pointerup', (e) => {
     // 任何拖动（元件/导线/拐点）结束后都记一条撤销记录
     if (drag && drag.moved) pushHistory();
+    // 拖动期间是增量绘制，这里做一次完整重绘：清掉临时 transform、刷新净表/诊断/统计
+    if (drag && drag.moved) { sch.refresh(); render(); }
 
     if (drag && drag.mode === 'move' && !drag.moved && drag.ids && drag.ids.length === 1) {
       if (drag.dblCandidate) {

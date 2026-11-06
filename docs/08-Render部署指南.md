@@ -198,3 +198,31 @@ Render 检测到推送会**自动重新部署**（约 3–6 分钟）。
 
 > 如果校内已有 Linux 服务器，直接用 `docs/07-自建上线清单.md` 的路线 A，
 > 成本更低、数据完全自主，比 Render 更合适。
+
+---
+
+## 2026-11-06 23:05 · 部署完成记录
+
+| 项目 | 结果 |
+|---|---|
+| 代码仓库 | `https://github.com/suyuanyzh-usth/mculab`（Public，main 分支） |
+| 线上地址 | **https://mcu-lab.onrender.com** |
+| 站点状态 | HTTP 200，浏览器实测 3.6 秒加载，0 控制台报错 |
+| 新版本判定 | `/js/ui/view-open.js`、`view-grade.js`、`view-manage.js` 均 200；六项接口全部 401（存在，需登录） |
+| C 编译器 | `sdccUsable: true` —— 说明 Dockerfile 里"用修正版 stc89.h 覆盖发行版"这一步生效了 |
+| 登录页 | 三个页签（登录/学生注册/教师注册）正常渲染，底部显示"工具链：SDCC 已就绪" |
+
+### 部署踩过的两个小坑
+
+1. **分支名**：本机 `git init` 默认建的是 `master`，直接 `git push origin main` 报
+   `src refspec main does not match any`。执行 `git branch -M main` 后正常。
+2. **换行符**：Windows 上 `core.autocrlf=true`，仓库内存的是 LF，所以 Dockerfile 里
+   没有 CR，Docker 构建不会因 `\r` 失败。已在提交后核对 `git show HEAD:Dockerfile | grep -c $'\r'` = 0。
+
+### 上线后必须做的三件事
+
+1. **挂磁盘**：免费实例没有持久磁盘，重新部署会清空 `/app/data`（学生账号、成绩）。
+   正式使用需 Starter 实例 + 1GB Disk，挂载路径 **`/app/data`**。
+2. **配 AI 密钥**：自建域名下云服务内置模型不可用（Origin 不匹配，代码会静默跳过），
+   AI 会走服务端模型，必须在教师后台配 DeepSeek 密钥，否则是离线模板回答。
+3. **注意休眠**：免费实例 15 分钟无请求会休眠，学生首次打开约等 50 秒。
