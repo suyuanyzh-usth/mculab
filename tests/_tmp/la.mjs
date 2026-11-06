@@ -1,0 +1,16 @@
+import fs from 'node:fs';
+const ROOT='C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab';
+const { CPU8051 } = await import('file://'+ROOT+'/public/js/core/cpu8051.js');
+const { LogicAnalyzer } = await import('file://'+ROOT+'/public/js/scope/instruments.js');
+const hex = fs.readFileSync(ROOT+'/public/hex/led_flow.hex','utf8');
+const cpu = new CPU8051(); cpu.loadHex(hex);
+cpu.runCycles(3_000_000);
+const ev8 = cpu.events.filter(e=>e.pin===0x08);
+console.log('P1.0 事件数:', ev8.length, ev8.slice(0,6).map(e=>`t=${e.t}:${e.v}`).join(' '));
+const la = new LogicAnalyzer({});
+la.setChannels(Array.from({length:8},(_,i)=>({pin:8+i,label:'P1.'+i})));
+la.importEvents(cpu.events.slice());
+console.log('samples:', la.samples.length, 'sampling', la.samples.slice(0,4).map(s=>`${s.t}:${s.v.toString(2)}`).join(' '));
+const e0 = la.edges(0);
+console.log('CH0 边沿:', e0.map(x=>`${x.t}:${x.v}`).join(' '));
+console.log('measure(0):', JSON.stringify(la.measure(0)));

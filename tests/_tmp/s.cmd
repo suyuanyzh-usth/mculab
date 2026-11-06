@@ -1,0 +1,3 @@
+step 4
+dump 0x30 0x33
+q

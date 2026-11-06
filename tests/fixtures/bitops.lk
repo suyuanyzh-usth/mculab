@@ -1,0 +1,17 @@
+-muwx
+-i C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/tests/fixtures/bitops.ihx
+-M
+-b HOME = 0x0000
+-b XSEG = 0x0001
+-b PSEG = 0x0001
+-b ISEG = 0x0000
+-b BSEG = 0x0000
+-k C:\Users\user\WorkBuddy\2026-09-26-10-47-58\mculab\toolchain\sdcc\bin\..\lib\small-stack-auto
+-l mcs51
+-l libsdcc
+-l libint
+-l liblong
+-l libfloat
+C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/tests/fixtures/bitops.rel
+
+-e

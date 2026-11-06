@@ -1,0 +1,35 @@
+[Unit]
+Description=MCU Lab - Microcontroller Teaching Simulation Platform
+Documentation=file:///opt/mculab/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mculab
+Group=mculab
+WorkingDirectory=/opt/mculab
+# PORT 可自定义；不写则默认 8080
+Environment=NODE_ENV=production
+Environment=PORT=8080
+Environment=HOST=0.0.0.0
+# 若使用系统 SDCC（apt install sdcc），一般无需设置；
+# 若 SDCC 装在非标准路径，取消下一行注释并改成实际 bin 目录
+# Environment=MCULAB_SDCC_BIN=/usr/bin
+ExecStart=/usr/bin/node server/index.js
+Restart=always
+RestartSec=3
+# 日志进 journald：journalctl -u mculab -f
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=mculab
+
+# 安全加固（不影响功能）
+NoNewPrivileges=false
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/mculab/data
+
+[Install]
+WantedBy=multi-user.target

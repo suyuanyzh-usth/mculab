@@ -1,0 +1,40 @@
+uCsim 0.9.9, Copyright (C) 1997 Daniel Drotos.
+uCsim comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
+This is free software, and you are welcome to redistribute it
+under certain conditions; type `show c' for details.
+state
+step 3000
+state
+q
+CPU state= OK PC= 0x000000 frequency= 11059200 HZ
+Operation since last reset= 0 vclks
+Inst= 0 Fetch= 0 Read= 0 Write= 0
+Total time since last reset= 0.000000000000000 sec (0 clks)
+Time in isr = 0.000000000000000 sec (0 clks) 0.00%
+Time in idle= 0.000000000000000 sec (0 clks) 0.00%
+Most value of stack pointer= 0x000007
+Simulation: stopped
+Runtime: 0.014896 sec
+Loading from stack_call.ihx
+345 words read from stack_call.ihx
+
+Stop at 0x000136: (109) stepped 61524 ticks
+     R0 R1 R2 R3 R4 R5 R6 R7
+     13 0f c9 4b 82 2b 5c 74
+@R0 09 .  ACC= 0x5f  95 _  B= 0x00
+@R1 09 .  PSW= 0x00 CY=0 AC=0 OV=0 P=0
+SP 0x0c -> 00 4c 00 5f de 74 5c 2b
+   DPTR= 0x00002b82 @DPTR= 0x86 134 .
+0x0136    80 fe    SJMP   0x0136[0K
+F 0x000136
+Simulated 61524 ticks (5.563e-03 sec)
+Host usage: 0.000525 sec, rate=10.596524
+CPU state= OK PC= 0x000136 frequency= 11059200 HZ
+Operation since last reset= 6296 vclks
+Inst= 3000 Fetch= 5272 Read= 435 Write= 589
+Total time since last reset= 0.005563151041667 sec (61524 clks)
+Time in isr = 0.000000000000000 sec (0 clks) 0.00%
+Time in idle= 0.000000000000000 sec (0 clks) 0.00%
+Most value of stack pointer= 0x000018
+Simulation: stopped
+Runtime: 0.015804 sec

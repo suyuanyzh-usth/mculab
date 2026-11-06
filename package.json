@@ -1,0 +1,17 @@
+{
+  "name": "mculab",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "微控制器原理及应用 教学仿真实验平台 (8051/STC89C52)",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "test": "node tests/run_all.mjs",
+    "test:core": "node tests/oracle.test.mjs",
+    "test:asm": "node tests/asm.test.mjs",
+    "test:hex": "node tests/hex.test.mjs",
+    "build:slim": "node tools/slim_toolchain.mjs"
+  },
+  "engines": { "node": ">=22.5.0" }
+}

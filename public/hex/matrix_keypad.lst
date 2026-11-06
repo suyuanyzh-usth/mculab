@@ -1,0 +1,585 @@
+                                      1 ;--------------------------------------------------------
+                                      2 ; File Created by SDCC : free open source ISO C Compiler
+                                      3 ; Version 4.6.0 #16555 (MINGW64)
+                                      4 ;--------------------------------------------------------
+                                      5 	.module matrix_keypad
+                                      6 	
+                                      7 	.optsdcc -mmcs51 --model-small
+                                      8 ;--------------------------------------------------------
+                                      9 ; Public variables in this module
+                                     10 ;--------------------------------------------------------
+                                     11 	.globl _main
+                                     12 	.globl _keyScan
+                                     13 	.globl _delay_ms
+                                     14 	.globl _P4_3
+                                     15 	.globl _P4_2
+                                     16 	.globl _P4_1
+                                     17 	.globl _P4_0
+                                     18 	.globl _CY
+                                     19 	.globl _AC
+                                     20 	.globl _F0
+                                     21 	.globl _RS1
+                                     22 	.globl _RS0
+                                     23 	.globl _OV
+                                     24 	.globl _F1
+                                     25 	.globl _P
+                                     26 	.globl _PS
+                                     27 	.globl _PT1
+                                     28 	.globl _PX1
+                                     29 	.globl _PT0
+                                     30 	.globl _PX0
+                                     31 	.globl _RD
+                                     32 	.globl _WR
+                                     33 	.globl _T1
+                                     34 	.globl _T0
+                                     35 	.globl _INT1
+                                     36 	.globl _INT0
+                                     37 	.globl _TXD
+                                     38 	.globl _RXD
+                                     39 	.globl _P3_7
+                                     40 	.globl _P3_6
+                                     41 	.globl _P3_5
+                                     42 	.globl _P3_4
+                                     43 	.globl _P3_3
+                                     44 	.globl _P3_2
+                                     45 	.globl _P3_1
+                                     46 	.globl _P3_0
+                                     47 	.globl _EA
+                                     48 	.globl _ES
+                                     49 	.globl _ET1
+                                     50 	.globl _EX1
+                                     51 	.globl _ET0
+                                     52 	.globl _EX0
+                                     53 	.globl _P2_7
+                                     54 	.globl _P2_6
+                                     55 	.globl _P2_5
+                                     56 	.globl _P2_4
+                                     57 	.globl _P2_3
+                                     58 	.globl _P2_2
+                                     59 	.globl _P2_1
+                                     60 	.globl _P2_0
+                                     61 	.globl _SM0
+                                     62 	.globl _SM1
+                                     63 	.globl _SM2
+                                     64 	.globl _REN
+                                     65 	.globl _TB8
+                                     66 	.globl _RB8
+                                     67 	.globl _TI
+                                     68 	.globl _RI
+                                     69 	.globl _P1_7
+                                     70 	.globl _P1_6
+                                     71 	.globl _P1_5
+                                     72 	.globl _P1_4
+                                     73 	.globl _P1_3
+                                     74 	.globl _P1_2
+                                     75 	.globl _P1_1
+                                     76 	.globl _P1_0
+                                     77 	.globl _TF1
+                                     78 	.globl _TR1
+                                     79 	.globl _TF0
+                                     80 	.globl _TR0
+                                     81 	.globl _IE1
+                                     82 	.globl _IT1
+                                     83 	.globl _IE0
+                                     84 	.globl _IT0
+                                     85 	.globl _P0_7
+                                     86 	.globl _P0_6
+                                     87 	.globl _P0_5
+                                     88 	.globl _P0_4
+                                     89 	.globl _P0_3
+                                     90 	.globl _P0_2
+                                     91 	.globl _P0_1
+                                     92 	.globl _P0_0
+                                     93 	.globl _P4
+                                     94 	.globl _IAP_CONTR
+                                     95 	.globl _IAP_TRIG
+                                     96 	.globl _IAP_CMD
+                                     97 	.globl _IAP_ADDRL
+                                     98 	.globl _IAP_ADDRH
+                                     99 	.globl _IAP_DATA
+                                    100 	.globl _WDT_CONTR
+                                    101 	.globl _TH2
+                                    102 	.globl _TL2
+                                    103 	.globl _RCAP2H
+                                    104 	.globl _RCAP2L
+                                    105 	.globl _T2MOD
+                                    106 	.globl _T2CON
+                                    107 	.globl _XICON
+                                    108 	.globl _SADEN
+                                    109 	.globl _IPH
+                                    110 	.globl _SADDR
+                                    111 	.globl _AUXR1
+                                    112 	.globl _AUXR
+                                    113 	.globl _B
+                                    114 	.globl _ACC
+                                    115 	.globl _PSW
+                                    116 	.globl _IP
+                                    117 	.globl _P3
+                                    118 	.globl _IE
+                                    119 	.globl _P2
+                                    120 	.globl _SBUF
+                                    121 	.globl _SCON
+                                    122 	.globl _P1
+                                    123 	.globl _TH1
+                                    124 	.globl _TH0
+                                    125 	.globl _TL1
+                                    126 	.globl _TL0
+                                    127 	.globl _TMOD
+                                    128 	.globl _TCON
+                                    129 	.globl _PCON
+                                    130 	.globl _DPH
+                                    131 	.globl _DPL
+                                    132 	.globl _SP
+                                    133 	.globl _P0
+                                    134 ;--------------------------------------------------------
+                                    135 ; special function registers
+                                    136 ;--------------------------------------------------------
+                                    137 	.area RSEG    (ABS,DATA)
+      000000                        138 	.org 0x0000
+                           000080   139 _P0	=	0x0080
+                           000081   140 _SP	=	0x0081
+                           000082   141 _DPL	=	0x0082
+                           000083   142 _DPH	=	0x0083
+                           000087   143 _PCON	=	0x0087
+                           000088   144 _TCON	=	0x0088
+                           000089   145 _TMOD	=	0x0089
+                           00008A   146 _TL0	=	0x008a
+                           00008B   147 _TL1	=	0x008b
+                           00008C   148 _TH0	=	0x008c
+                           00008D   149 _TH1	=	0x008d
+                           000090   150 _P1	=	0x0090
+                           000098   151 _SCON	=	0x0098
+                           000099   152 _SBUF	=	0x0099
+                           0000A0   153 _P2	=	0x00a0
+                           0000A8   154 _IE	=	0x00a8
+                           0000B0   155 _P3	=	0x00b0
+                           0000B8   156 _IP	=	0x00b8
+                           0000D0   157 _PSW	=	0x00d0
+                           0000E0   158 _ACC	=	0x00e0
+                           0000F0   159 _B	=	0x00f0
+                           00008E   160 _AUXR	=	0x008e
+                           0000A2   161 _AUXR1	=	0x00a2
+                           0000A9   162 _SADDR	=	0x00a9
+                           0000B7   163 _IPH	=	0x00b7
+                           0000B9   164 _SADEN	=	0x00b9
+                           0000C0   165 _XICON	=	0x00c0
+                           0000C8   166 _T2CON	=	0x00c8
+                           0000C9   167 _T2MOD	=	0x00c9
+                           0000CA   168 _RCAP2L	=	0x00ca
+                           0000CB   169 _RCAP2H	=	0x00cb
+                           0000CC   170 _TL2	=	0x00cc
+                           0000CD   171 _TH2	=	0x00cd
+                           0000E1   172 _WDT_CONTR	=	0x00e1
+                           0000E2   173 _IAP_DATA	=	0x00e2
+                           0000E3   174 _IAP_ADDRH	=	0x00e3
+                           0000E4   175 _IAP_ADDRL	=	0x00e4
+                           0000E5   176 _IAP_CMD	=	0x00e5
+                           0000E6   177 _IAP_TRIG	=	0x00e6
+                           0000E7   178 _IAP_CONTR	=	0x00e7
+                           0000E8   179 _P4	=	0x00e8
+                                    180 ;--------------------------------------------------------
+                                    181 ; special function bits
+                                    182 ;--------------------------------------------------------
+                                    183 	.area RSEG    (ABS,DATA)
+      000000                        184 	.org 0x0000
+                           000080   185 _P0_0	=	0x0080
+                           000081   186 _P0_1	=	0x0081
+                           000082   187 _P0_2	=	0x0082
+                           000083   188 _P0_3	=	0x0083
+                           000084   189 _P0_4	=	0x0084
+                           000085   190 _P0_5	=	0x0085
+                           000086   191 _P0_6	=	0x0086
+                           000087   192 _P0_7	=	0x0087
+                           000088   193 _IT0	=	0x0088
+                           000089   194 _IE0	=	0x0089
+                           00008A   195 _IT1	=	0x008a
+                           00008B   196 _IE1	=	0x008b
+                           00008C   197 _TR0	=	0x008c
+                           00008D   198 _TF0	=	0x008d
+                           00008E   199 _TR1	=	0x008e
+                           00008F   200 _TF1	=	0x008f
+                           000090   201 _P1_0	=	0x0090
+                           000091   202 _P1_1	=	0x0091
+                           000092   203 _P1_2	=	0x0092
+                           000093   204 _P1_3	=	0x0093
+                           000094   205 _P1_4	=	0x0094
+                           000095   206 _P1_5	=	0x0095
+                           000096   207 _P1_6	=	0x0096
+                           000097   208 _P1_7	=	0x0097
+                           000098   209 _RI	=	0x0098
+                           000099   210 _TI	=	0x0099
+                           00009A   211 _RB8	=	0x009a
+                           00009B   212 _TB8	=	0x009b
+                           00009C   213 _REN	=	0x009c
+                           00009D   214 _SM2	=	0x009d
+                           00009E   215 _SM1	=	0x009e
+                           00009F   216 _SM0	=	0x009f
+                           0000A0   217 _P2_0	=	0x00a0
+                           0000A1   218 _P2_1	=	0x00a1
+                           0000A2   219 _P2_2	=	0x00a2
+                           0000A3   220 _P2_3	=	0x00a3
+                           0000A4   221 _P2_4	=	0x00a4
+                           0000A5   222 _P2_5	=	0x00a5
+                           0000A6   223 _P2_6	=	0x00a6
+                           0000A7   224 _P2_7	=	0x00a7
+                           0000A8   225 _EX0	=	0x00a8
+                           0000A9   226 _ET0	=	0x00a9
+                           0000AA   227 _EX1	=	0x00aa
+                           0000AB   228 _ET1	=	0x00ab
+                           0000AC   229 _ES	=	0x00ac
+                           0000AF   230 _EA	=	0x00af
+                           0000B0   231 _P3_0	=	0x00b0
+                           0000B1   232 _P3_1	=	0x00b1
+                           0000B2   233 _P3_2	=	0x00b2
+                           0000B3   234 _P3_3	=	0x00b3
+                           0000B4   235 _P3_4	=	0x00b4
+                           0000B5   236 _P3_5	=	0x00b5
+                           0000B6   237 _P3_6	=	0x00b6
+                           0000B7   238 _P3_7	=	0x00b7
+                           0000B0   239 _RXD	=	0x00b0
+                           0000B1   240 _TXD	=	0x00b1
+                           0000B2   241 _INT0	=	0x00b2
+                           0000B3   242 _INT1	=	0x00b3
+                           0000B4   243 _T0	=	0x00b4
+                           0000B5   244 _T1	=	0x00b5
+                           0000B6   245 _WR	=	0x00b6
+                           0000B7   246 _RD	=	0x00b7
+                           0000B8   247 _PX0	=	0x00b8
+                           0000B9   248 _PT0	=	0x00b9
+                           0000BA   249 _PX1	=	0x00ba
+                           0000BB   250 _PT1	=	0x00bb
+                           0000BC   251 _PS	=	0x00bc
+                           0000D0   252 _P	=	0x00d0
+                           0000D1   253 _F1	=	0x00d1
+                           0000D2   254 _OV	=	0x00d2
+                           0000D3   255 _RS0	=	0x00d3
+                           0000D4   256 _RS1	=	0x00d4
+                           0000D5   257 _F0	=	0x00d5
+                           0000D6   258 _AC	=	0x00d6
+                           0000D7   259 _CY	=	0x00d7
+                           0000C0   260 _P4_0	=	0x00c0
+                           0000C1   261 _P4_1	=	0x00c1
+                           0000C2   262 _P4_2	=	0x00c2
+                           0000C3   263 _P4_3	=	0x00c3
+                                    264 ;--------------------------------------------------------
+                                    265 ; overlayable register banks
+                                    266 ;--------------------------------------------------------
+                                    267 	.area REG_BANK_0	(REL,OVR,DATA)
+      000000                        268 	.ds 8
+                                    269 ;--------------------------------------------------------
+                                    270 ; internal ram data
+                                    271 ;--------------------------------------------------------
+                                    272 	.area DSEG    (DATA)
+                                    273 ;--------------------------------------------------------
+                                    274 ; overlayable items in internal ram
+                                    275 ;--------------------------------------------------------
+                                    276 ;--------------------------------------------------------
+                                    277 ; Stack segment in internal ram
+                                    278 ;--------------------------------------------------------
+                                    279 	.area SSEG
+      000000                        280 __start__stack:
+      000000                        281 	.ds	1
+                                    282 
+                                    283 ;--------------------------------------------------------
+                                    284 ; indirectly addressable internal ram data
+                                    285 ;--------------------------------------------------------
+                                    286 	.area ISEG    (DATA)
+                                    287 ;--------------------------------------------------------
+                                    288 ; absolute internal ram data
+                                    289 ;--------------------------------------------------------
+                                    290 	.area IABS    (ABS,DATA)
+                                    291 	.area IABS    (ABS,DATA)
+                                    292 ;--------------------------------------------------------
+                                    293 ; bit data
+                                    294 ;--------------------------------------------------------
+                                    295 	.area BSEG    (BIT)
+                                    296 ;--------------------------------------------------------
+                                    297 ; paged external ram data
+                                    298 ;--------------------------------------------------------
+                                    299 	.area PSEG    (PAG,XDATA)
+                                    300 ;--------------------------------------------------------
+                                    301 ; uninitialized external ram data
+                                    302 ;--------------------------------------------------------
+                                    303 	.area XSEG    (XDATA)
+                                    304 ;--------------------------------------------------------
+                                    305 ; absolute external ram data
+                                    306 ;--------------------------------------------------------
+                                    307 	.area XABS    (ABS,XDATA)
+                                    308 ;--------------------------------------------------------
+                                    309 ; initialized external ram data
+                                    310 ;--------------------------------------------------------
+                                    311 	.area XISEG   (XDATA)
+                                    312 	.area HOME    (CODE)
+                                    313 	.area GSINIT0 (CODE)
+                                    314 	.area GSINIT1 (CODE)
+                                    315 	.area GSINIT2 (CODE)
+                                    316 	.area GSINIT3 (CODE)
+                                    317 	.area GSINIT4 (CODE)
+                                    318 	.area GSINIT5 (CODE)
+                                    319 	.area GSINIT  (CODE)
+                                    320 	.area GSFINAL (CODE)
+                                    321 	.area CSEG    (CODE)
+                                    322 ;--------------------------------------------------------
+                                    323 ; interrupt vector
+                                    324 ;--------------------------------------------------------
+                                    325 	.area HOME    (CODE)
+      000000                        326 __interrupt_vect:
+      000000 02r00r00         [24]  327 	ljmp	__sdcc_gsinit_startup
+                                    328 ; restartable atomic support routines
+      000003                        329 	.ds	5
+      000008                        330 sdcc_atomic_exchange_rollback_start::
+      000008 00               [12]  331 	nop
+      000009 00               [12]  332 	nop
+      00000A                        333 sdcc_atomic_exchange_pdata_impl:
+      00000A E2               [24]  334 	movx	a, @r0
+      00000B FB               [12]  335 	mov	r3, a
+      00000C EA               [12]  336 	mov	a, r2
+      00000D F2               [24]  337 	movx	@r0, a
+      00000E 80 2C            [24]  338 	sjmp	sdcc_atomic_exchange_exit
+      000010 00               [12]  339 	nop
+      000011 00               [12]  340 	nop
+      000012                        341 sdcc_atomic_exchange_xdata_impl:
+      000012 E0               [24]  342 	movx	a, @dptr
+      000013 FB               [12]  343 	mov	r3, a
+      000014 EA               [12]  344 	mov	a, r2
+      000015 F0               [24]  345 	movx	@dptr, a
+      000016 80 24            [24]  346 	sjmp	sdcc_atomic_exchange_exit
+      000018                        347 sdcc_atomic_compare_exchange_idata_impl:
+      000018 E6               [12]  348 	mov	a, @r0
+      000019 B5 02 02         [24]  349 	cjne	a, ar2, .+#5
+      00001C EB               [12]  350 	mov	a, r3
+      00001D F6               [12]  351 	mov	@r0, a
+      00001E 22               [24]  352 	ret
+      00001F 00               [12]  353 	nop
+      000020                        354 sdcc_atomic_compare_exchange_pdata_impl:
+      000020 E2               [24]  355 	movx	a, @r0
+      000021 B5 02 02         [24]  356 	cjne	a, ar2, .+#5
+      000024 EB               [12]  357 	mov	a, r3
+      000025 F2               [24]  358 	movx	@r0, a
+      000026 22               [24]  359 	ret
+      000027 00               [12]  360 	nop
+      000028                        361 sdcc_atomic_compare_exchange_xdata_impl:
+      000028 E0               [24]  362 	movx	a, @dptr
+      000029 B5 02 02         [24]  363 	cjne	a, ar2, .+#5
+      00002C EB               [12]  364 	mov	a, r3
+      00002D F0               [24]  365 	movx	@dptr, a
+      00002E 22               [24]  366 	ret
+      00002F                        367 sdcc_atomic_exchange_rollback_end::
+                                    368 
+      00002F                        369 sdcc_atomic_exchange_gptr_impl::
+      00002F 30 F6 E0         [24]  370 	jnb	b.6, sdcc_atomic_exchange_xdata_impl
+      000032 A8 82            [24]  371 	mov	r0, dpl
+      000034 20 F5 D3         [24]  372 	jb	b.5, sdcc_atomic_exchange_pdata_impl
+      000037                        373 sdcc_atomic_exchange_idata_impl:
+      000037 EA               [12]  374 	mov	a, r2
+      000038 C6               [12]  375 	xch	a, @r0
+      000039 F5 82            [12]  376 	mov	dpl, a
+      00003B 22               [24]  377 	ret
+      00003C                        378 sdcc_atomic_exchange_exit:
+      00003C 8B 82            [24]  379 	mov	dpl, r3
+      00003E 22               [24]  380 	ret
+      00003F                        381 sdcc_atomic_compare_exchange_gptr_impl::
+      00003F 30 F6 E6         [24]  382 	jnb	b.6, sdcc_atomic_compare_exchange_xdata_impl
+      000042 A8 82            [24]  383 	mov	r0, dpl
+      000044 20 F5 D9         [24]  384 	jb	b.5, sdcc_atomic_compare_exchange_pdata_impl
+      000047 80 CF            [24]  385 	sjmp	sdcc_atomic_compare_exchange_idata_impl
+                                    386 ;--------------------------------------------------------
+                                    387 ; global & static initialisations
+                                    388 ;--------------------------------------------------------
+                                    389 	.area HOME    (CODE)
+                                    390 	.area GSINIT  (CODE)
+                                    391 	.area GSFINAL (CODE)
+                                    392 	.area GSINIT  (CODE)
+                                    393 	.globl __sdcc_gsinit_startup
+                                    394 	.globl __sdcc_program_startup
+                                    395 	.globl __start__stack
+                                    396 	.globl __mcs51_genXINIT
+                                    397 	.globl __mcs51_genXRAMCLEAR
+                                    398 	.globl __mcs51_genRAMCLEAR
+                                    399 	.area GSFINAL (CODE)
+      000000 02r00r49         [24]  400 	ljmp	__sdcc_program_startup
+                                    401 ;--------------------------------------------------------
+                                    402 ; Home
+                                    403 ;--------------------------------------------------------
+                                    404 	.area HOME    (CODE)
+                                    405 	.area HOME    (CODE)
+      000049                        406 __sdcc_program_startup:
+      000049 12r00r80         [24]  407 	lcall	_main
+      00004C                        408 __sdcc_program_exit:
+      00004C 80 FE            [24]  409 	sjmp	.
+                                    410 ;	return from main will return to caller
+                                    411 ;--------------------------------------------------------
+                                    412 ; code
+                                    413 ;--------------------------------------------------------
+                                    414 	.area CSEG    (CODE)
+                                    415 ;------------------------------------------------------------
+                                    416 ;Allocation info for local variables in function 'delay_ms'
+                                    417 ;------------------------------------------------------------
+                                    418 ;ms            Allocated to registers r6 r7 
+                                    419 ;i             Allocated to registers r4 r5 
+                                    420 ;j             Allocated to registers r3 
+                                    421 ;------------------------------------------------------------
+                                    422 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:5: void delay_ms(unsigned int ms){
+                                    423 ;	-----------------------------------------
+                                    424 ;	 function delay_ms
+                                    425 ;	-----------------------------------------
+      000000                        426 _delay_ms:
+                           000007   427 	ar7 = 0x07
+                           000006   428 	ar6 = 0x06
+                           000005   429 	ar5 = 0x05
+                           000004   430 	ar4 = 0x04
+                           000003   431 	ar3 = 0x03
+                           000002   432 	ar2 = 0x02
+                           000001   433 	ar1 = 0x01
+                           000000   434 	ar0 = 0x00
+      000000 AE 82            [24]  435 	mov	r6, dpl
+      000002 AF 83            [24]  436 	mov	r7, dph
+                                    437 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:7: for(i = 0; i < ms; i++)
+      000004 7C 00            [12]  438 	mov	r4,#0x00
+      000006 7D 00            [12]  439 	mov	r5,#0x00
+      000008                        440 00107$:
+      000008 C3               [12]  441 	clr	c
+      000009 EC               [12]  442 	mov	a,r4
+      00000A 9E               [12]  443 	subb	a,r6
+      00000B ED               [12]  444 	mov	a,r5
+      00000C 9F               [12]  445 	subb	a,r7
+      00000D 50 0B            [24]  446 	jnc	00109$
+                                    447 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:8: for(j = 0; j < 120; j++);
+      00000F 7B 78            [12]  448 	mov	r3,#0x78
+      000011                        449 00105$:
+      000011 DB FE            [24]  450 	djnz	r3,00105$
+                                    451 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:7: for(i = 0; i < ms; i++)
+      000013 0C               [12]  452 	inc	r4
+      000014 BC 00 F1         [24]  453 	cjne	r4,#0x00,00107$
+      000017 0D               [12]  454 	inc	r5
+      000018 80 EE            [24]  455 	sjmp	00107$
+      00001A                        456 00109$:
+                                    457 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:9: }
+      00001A 22               [24]  458 	ret
+                                    459 ;------------------------------------------------------------
+                                    460 ;Allocation info for local variables in function 'keyScan'
+                                    461 ;------------------------------------------------------------
+                                    462 ;row           Allocated to registers r7 
+                                    463 ;col           Allocated to registers r4 
+                                    464 ;val           Allocated to registers r5 
+                                    465 ;sloc0         Allocated to stack - _bp +4 +1 
+                                    466 ;------------------------------------------------------------
+                                    467 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:12: unsigned char keyScan(void){
+                                    468 ;	-----------------------------------------
+                                    469 ;	 function keyScan
+                                    470 ;	-----------------------------------------
+      00001B                        471 _keyScan:
+                                    472 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:14: for(row = 0; row < 4; row++){
+      00001B 7F 00            [12]  473 	mov	r7,#0x00
+      00001D 7E 00            [12]  474 	mov	r6,#0x00
+      00001F                        475 00109$:
+                                    476 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:15: P1 = ~(0x01 << row);            /* 第 row 行拉低，其余行拉高 */
+      00001F 8E F0            [24]  477 	mov	b,r6
+      000021 05 F0            [12]  478 	inc	b
+      000023 74 01            [12]  479 	mov	a,#0x01
+      000025 80 02            [24]  480 	sjmp	00156$
+      000027                        481 00155$:
+      000027 25 E0            [12]  482 	add	a,acc
+      000029                        483 00156$:
+      000029 D5 F0 FB         [24]  484 	djnz	b,00155$
+      00002C F4               [12]  485 	cpl	a
+      00002D F5 90            [12]  486 	mov	_P1,a
+                                    487 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:16: val = P1;                       /* 读回端口 */
+      00002F AD 90            [24]  488 	mov	r5,_P1
+                                    489 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:17: for(col = 0; col < 4; col++){
+      000031 7C 00            [12]  490 	mov	r4,#0x00
+      000033 7B 00            [12]  491 	mov	r3,#0x00
+      000035                        492 00107$:
+                                    493 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:18: if(((val >> (col + 4)) & 0x01) == 0){   /* 该列为低 → 命中 */
+      000035 74 04            [12]  494 	mov	a,#0x04
+      000037 2B               [12]  495 	add	a, r3
+      000038 F5 F0            [12]  496 	mov	b, a
+      00003A 05 F0            [12]  497 	inc	b
+      00003C ED               [12]  498 	mov	a,r5
+      00003D 80 02            [24]  499 	sjmp	00158$
+      00003F                        500 00157$:
+      00003F C3               [12]  501 	clr	c
+      000040 13               [12]  502 	rrc	a
+      000041                        503 00158$:
+      000041 D5 F0 FB         [24]  504 	djnz	b,00157$
+      000044 20 E0 22         [24]  505 	jb	acc.0,00108$
+                                    506 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:20: val = P1;
+      000047 AD 90            [24]  507 	mov	r5,_P1
+                                    508 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:21: if(((val >> (col + 4)) & 0x01) == 0)
+      000049 74 04            [12]  509 	mov	a,#0x04
+      00004B 2B               [12]  510 	add	a, r3
+      00004C F5 F0            [12]  511 	mov	b, a
+      00004E 05 F0            [12]  512 	inc	b
+      000050 ED               [12]  513 	mov	a,r5
+      000051 80 02            [24]  514 	sjmp	00161$
+      000053                        515 00160$:
+      000053 C3               [12]  516 	clr	c
+      000054 13               [12]  517 	rrc	a
+      000055                        518 00161$:
+      000055 D5 F0 FB         [24]  519 	djnz	b,00160$
+      000058 20 E0 0E         [24]  520 	jb	acc.0,00108$
+                                    521 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:22: return row * 4 + col;
+      00005B 8F 02            [24]  522 	mov	ar2,r7
+      00005D EA               [12]  523 	mov	a,r2
+      00005E 2A               [12]  524 	add	a,r2
+      00005F 25 E0            [12]  525 	add	a,acc
+      000061 FF               [12]  526 	mov	r7,a
+      000062 8C 02            [24]  527 	mov	ar2,r4
+      000064 EA               [12]  528 	mov	a,r2
+      000065 2F               [12]  529 	add	a, r7
+      000066 F5 82            [12]  530 	mov	dpl,a
+      000068 22               [24]  531 	ret
+      000069                        532 00108$:
+                                    533 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:17: for(col = 0; col < 4; col++){
+      000069 0B               [12]  534 	inc	r3
+      00006A 8B 04            [24]  535 	mov	ar4,r3
+      00006C BB 04 00         [24]  536 	cjne	r3,#0x04,00163$
+      00006F                        537 00163$:
+      00006F 40 C4            [24]  538 	jc	00107$
+                                    539 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:14: for(row = 0; row < 4; row++){
+      000071 0E               [12]  540 	inc	r6
+      000072 8E 07            [24]  541 	mov	ar7,r6
+      000074 BE 04 00         [24]  542 	cjne	r6,#0x04,00165$
+      000077                        543 00165$:
+      000077 40 A6            [24]  544 	jc	00109$
+                                    545 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:26: P1 = 0xFF;
+      000079 75 90 FF         [24]  546 	mov	_P1,#0xff
+                                    547 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:27: return 16;
+      00007C 75 82 10         [24]  548 	mov	dpl, #0x10
+                                    549 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:28: }
+      00007F 22               [24]  550 	ret
+                                    551 ;------------------------------------------------------------
+                                    552 ;Allocation info for local variables in function 'main'
+                                    553 ;------------------------------------------------------------
+                                    554 ;key           Allocated to registers r7 
+                                    555 ;count         Allocated to registers 
+                                    556 ;------------------------------------------------------------
+                                    557 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:30: void main(void){
+                                    558 ;	-----------------------------------------
+                                    559 ;	 function main
+                                    560 ;	-----------------------------------------
+      000080                        561 _main:
+                                    562 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:33: P1 = 0xFF;
+      000080 75 90 FF         [24]  563 	mov	_P1,#0xff
+                                    564 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:34: while(1){
+      000083                        565 00107$:
+                                    566 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:35: key = keyScan();
+      000083 12r00r1B         [24]  567 	lcall	_keyScan
+      000086 AF 82            [24]  568 	mov	r7, dpl
+                                    569 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:36: if(key < 16){
+      000088 BF 10 00         [24]  570 	cjne	r7,#0x10,00134$
+      00008B                        571 00134$:
+      00008B 50 F6            [24]  572 	jnc	00107$
+                                    573 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:38: while(keyScan() < 16);      /* 等待松手，避免重复计数 */
+      00008D                        574 00101$:
+      00008D 12r00r1B         [24]  575 	lcall	_keyScan
+      000090 AF 82            [24]  576 	mov	r7, dpl
+      000092 BF 10 00         [24]  577 	cjne	r7,#0x10,00136$
+      000095                        578 00136$:
+      000095 40 F6            [24]  579 	jc	00101$
+                                    580 ;	C:/Users/user/WorkBuddy/2026-09-26-10-47-58/mculab/data/experiments/matrix_keypad.c:41: }
+      000097 80 EA            [24]  581 	sjmp	00107$
+                                    582 	.area CSEG    (CODE)
+                                    583 	.area CONST   (CODE)
+                                    584 	.area XINIT   (CODE)
+                                    585 	.area CABS    (ABS,CODE)

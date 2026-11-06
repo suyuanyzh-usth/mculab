@@ -1,0 +1,40 @@
+uCsim 0.9.9, Copyright (C) 1997 Daniel Drotos.
+uCsim comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
+This is free software, and you are welcome to redistribute it
+under certain conditions; type `show c' for details.
+state
+step 3000
+state
+q
+CPU state= OK PC= 0x000000 frequency= 11059200 HZ
+Operation since last reset= 0 vclks
+Inst= 0 Fetch= 0 Read= 0 Write= 0
+Total time since last reset= 0.000000000000000 sec (0 clks)
+Time in isr = 0.000000000000000 sec (0 clks) 0.00%
+Time in idle= 0.000000000000000 sec (0 clks) 0.00%
+Most value of stack pointer= 0x000007
+Simulation: stopped
+Runtime: 0.011347 sec
+Loading from arith_logic.ihx
+219 words read from arith_logic.ihx
+
+Stop at 0x0000da: (109) stepped 60600 ticks
+     R0 R1 R2 R3 R4 R5 R6 R7
+     00 00 15 15 b8 28 12 38
+@R0 00 .  ACC= 0x38  56 8  B= 0x00
+@R1 00 .  PSW= 0x41 CY=0 AC=1 OV=0 P=1
+SP 0x0b -> 00 4c 01 13 38 12 28 b8
+   DPTR= 0x00000000 @DPTR= 0x83 131 .
+0x00da    80 fe    SJMP   0x00da[0K
+F 0x0000da
+Simulated 60600 ticks (5.480e-03 sec)
+Host usage: 0.000507 sec, rate=10.810494
+CPU state= OK PC= 0x0000da frequency= 11059200 HZ
+Operation since last reset= 5550 vclks
+Inst= 3000 Fetch= 5268 Read= 3 Write= 279
+Total time since last reset= 0.005479600694445 sec (60600 clks)
+Time in isr = 0.000000000000000 sec (0 clks) 0.00%
+Time in idle= 0.000000000000000 sec (0 clks) 0.00%
+Most value of stack pointer= 0x00000b
+Simulation: stopped
+Runtime: 0.012207 sec
