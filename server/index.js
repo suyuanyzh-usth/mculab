@@ -59,9 +59,20 @@ function isSecureReq(req) {
   return xf === 'https';
 }
 /** 会话 Cookie：在 HTTPS 下自动加 Secure；HttpOnly 始终开启 */
-function sessionCookie(req, token, maxAge = 14 * 86400) {
+/**
+ * 会话 Cookie。
+ *
+ * 默认发**会话级 Cookie**（不设 Max-Age）：浏览器在关闭时丢弃它，但同一浏览器
+ * 内的刷新、新开标签页都还在——既保证"刷新后自动进入、实验进度不丢"，
+ * 又避免公用电脑上关掉浏览器后仍然保留登录状态。
+ *
+ * 注意：Chrome/Edge 的"启动时继续上次打开的网页"会连会话 Cookie 一起恢复，
+ * 若在公用机上使用，下课后请点「退出」。
+ */
+function sessionCookie(req, token, maxAge = 0) {
   const secure = isSecureReq(req) ? '; Secure' : '';
-  return `mculab_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${secure}`;
+  const age = maxAge > 0 ? `; Max-Age=${maxAge}` : '';
+  return `mculab_token=${token}; Path=/; HttpOnly; SameSite=Lax${age}${secure}`;
 }
 
 const db = new DB(process.env.MCULAB_DB || path.join(DATA, 'mculab.db'));
