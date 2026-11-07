@@ -46,6 +46,15 @@ export class LLM {
       max_tokens: opts.maxTokens ?? c.maxTokens,
       stream: false
     };
+    /*
+     * DeepSeek V4 系列**默认开启思考模式**（effort=high），思维链写在 reasoning_content 里。
+     * 长文生成（如实验报告）时，思考会把 max_tokens 吃光，导致 content 为空、
+     * finish_reason=length —— 前端拿到一份空白报告。
+     * 因此长文场景显式关闭思考：{"thinking":{"type":"disabled"}}。
+     * 其它厂商（OpenAI/GLM/Ollama）不认识该字段，只在 DeepSeek 地址下附加。
+     */
+    const isDeepSeek = /deepseek\.com/i.test(c.baseUrl || '');
+    if (isDeepSeek && opts.noThinking) body.thinking = { type: 'disabled' };
     const ac = new AbortController();
     const timer = setTimeout(() => ac.abort(), opts.timeoutMs || 60000);
     let res;
@@ -69,7 +78,20 @@ export class LLM {
       ?? j.choices?.[0]?.text
       ?? j.data?.[0]?.content
       ?? '';
-    return { content, usage: j.usage || null, model: j.model || body.model, raw: j };
+    const finish = j.choices?.[0]?.finish_reason || '';
+    /*
+     * 空内容不能当作"成功"返回：调用方会把它当成一份空报告展示给学生。
+     * 这里抛错，让上层回退到离线模板，并给出可操作的提示。
+     */
+    if (!String(content).trim()) {
+      const hadReasoning = !!(j.choices?.[0]?.message?.reasoning_content);
+      throw new Error(
+        hadReasoning
+          ? `模型只输出了思考过程，最终内容为空（finish_reason=${finish || '未知'}）。请调大 maxTokens，或保持"关闭思考"设置后重试。`
+          : `模型返回了空内容（finish_reason=${finish || '未知'}），请检查模型名称与账户额度。`
+      );
+    }
+    return { content, finish, usage: j.usage || null, model: j.model || body.model, raw: j };
   }
 }
 

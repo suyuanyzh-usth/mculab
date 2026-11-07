@@ -603,7 +603,7 @@ route('POST', '/api/questions', async (req, res) => {
           { role: 'system', content: SYSTEM_TUTOR + (cfg.systemExtra ? '\n' + cfg.systemExtra : '') },
           { role: 'user', content: buildTutorPrompt(b) }
         ];
-        const r = await llm.chat(msgs, { maxTokens: 1200 });
+        const r = await llm.chat(msgs, { maxTokens: 1600, noThinking: true });
         auto = r.content;
       } catch (e) {
         auto = `（大模型调用失败：${e.message}）\n\n` + LocalTutor.reply({ question: b.title + '\n' + (b.body || ''), code: b.code || '', schematic: safeParse(b.context), problem: b.problemId });
@@ -705,7 +705,7 @@ route('POST', '/api/ai/chat', async (req, res) => {
     const userMsg = buildTutorPrompt({ title: b.question || '（无标题）', body: b.body, code: b.code, context: b.context, problemId: b.problemId })
       + (kbExtra ? '\n\n' + kbExtra + '\n\n（请优先依据以上资料回答；资料未覆盖时再凭通用经验，并说明这一点。）' : '');
     msgs.push({ role: 'user', content: userMsg });
-    const r = await llm.chat(msgs);
+    const r = await llm.chat(msgs, { noThinking: true });
     sendJSON(res, 200, { ok: true, offline: false, content: r.content, usage: r.usage, model: r.model });
   } catch (e) {
     const txt = `**大模型调用失败**：${e.message}\n\n---\n\n` + LocalTutor.reply({ question: b.question || '', code: b.code || '', schematic: safeParse(b.context), problem: b.problemId || '' });
@@ -795,7 +795,7 @@ route('POST', '/api/teacher/analyze', async (req, res) => {
     const r = await llm.chat([
       { role: 'system', content: SYSTEM_TEACHER },
       { role: 'user', content: '以下是《微控制器原理及应用》课程的学生练习数据（JSON）：\n\n```json\n' + JSON.stringify(stats, null, 1).slice(0, 20000) + '\n```\n\n请分析并给出教学建议。' }
-    ], { maxTokens: 2000 });
+    ], { maxTokens: 2600, noThinking: true });
     sendJSON(res, 200, { ok: true, offline: false, content: r.content });
   } catch (e) {
     sendJSON(res, 200, { ok: true, offline: true, degraded: true, content: `**大模型调用失败**：${e.message}\n\n---\n\n` + LocalTutor.teacherReport(stats) });
@@ -859,7 +859,7 @@ route('POST', '/api/reports/generate', async (req, res) => {
 6. 代码放在 \`\`\`c 代码块中，只摘录关键段落。`
         },
         { role: 'user', content: buildReportPrompt(ctx) }
-      ], { maxTokens: 2600 });
+      ], { maxTokens: 4096, noThinking: true });
       content = r.content; offline = false;
     } catch (e) {
       content = `> ⚠ 大模型调用失败（${e.message}），以下为离线模板草稿。\n\n` + offlineReport(ctx);
@@ -1733,7 +1733,7 @@ route('POST', '/api/settings/llm', async (req, res) => {
 route('POST', '/api/settings/llm/test', async (req, res) => {
   const u = requireRole(req, res, 'teacher'); if (!u) return;
   try {
-    const r = await llm.chat([{ role: 'user', content: '请回复"连接成功"四个字。' }], { maxTokens: 20, timeoutMs: 20000 });
+    const r = await llm.chat([{ role: 'user', content: '请回复"连接成功"四个字。' }], { maxTokens: 64, timeoutMs: 20000, noThinking: true });
     sendJSON(res, 200, { ok: true, content: r.content, model: r.model });
   } catch (e) { sendJSON(res, 200, { ok: false, error: e.message }); }
 });
