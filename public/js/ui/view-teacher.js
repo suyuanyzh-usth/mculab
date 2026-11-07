@@ -9,6 +9,8 @@ let students = [], classes = [], stats = null, classFilter = '';
 // 学生名单分页：默认每页 20 人，避免一次性渲染上百行把页面撑爆
 let page = 1;
 const PAGE_SIZE = 20;
+// 跨页选中集合（勾选状态必须在翻页后仍然保留）
+let selected = new Set();
 let tq = [];
 
 export function init() {
@@ -30,8 +32,18 @@ export function init() {
   $('#btnDeleteSelected').addEventListener('click', deleteSelectedStudents);
   $('#studentTable').addEventListener('change', (e) => {
     if (e.target.id === 'chkAllStudents') {
-      const on = e.target.checked;
-      $$('#studentTable input[data-sel]').forEach(c => { c.checked = on; });
+      // 全选作用于"当前筛选下的全部学生"，不只是本页——否则 80 人要翻 4 页才能选完
+      const rows = students.filter(x => !classFilter || x.class_name === classFilter);
+      if (e.target.checked) rows.forEach(x => selected.add(x.id));
+      else rows.forEach(x => selected.delete(x.id));
+      renderTable();
+      return;
+    }
+    const cb = e.target.closest('input[data-sel]');
+    if (cb) {
+      const id = Number(cb.dataset.sel);
+      cb.checked ? selected.add(id) : selected.delete(id);
+      updatePagerSel();
     }
   });
   $('#btnAnalyzeClass').addEventListener('click', analyze);
@@ -169,7 +181,7 @@ function renderTable() {
   const view = rows.slice(start, start + PAGE_SIZE);
   tb.innerHTML = `
     <thead><tr>
-      <th style="width:26px"><input type="checkbox" id="chkAllStudents" title="全选本页"></th>
+      <th style="width:26px"><input type="checkbox" id="chkAllStudents" title="全选（当前筛选下全部学生）" ${rows.length && rows.every(x => selected.has(x.id)) ? 'checked' : ''}></th>
       <th>学号</th><th>姓名</th><th>班级</th>
       <th style="text-align:right">练习</th><th style="text-align:right">通过</th>
       <th style="width:110px">完成实验</th><th style="text-align:right">提问</th>
@@ -180,7 +192,7 @@ function renderTable() {
       const solved = x.solved || 0;
       const pct = Math.min(100, Math.round(solved / 15 * 100));
       return `<tr>
-        <td><input type="checkbox" data-sel="${s.id}"></td>
+        <td><input type="checkbox" data-sel="${s.id}" ${selected.has(s.id) ? 'checked' : ''}></td>
         <td>${esc(s.student_no || s.username)}</td>
         <td>${esc(s.name || '')}</td>
         <td>${esc(s.class_name || '')}</td>
@@ -201,6 +213,13 @@ function renderTable() {
   renderPager(rows.length, totalPages, start, view.length);
 }
 
+function updatePagerSel() { renderPager(
+  students.filter(x => !classFilter || x.class_name === classFilter).length,
+  Math.max(1, Math.ceil(students.filter(x => !classFilter || x.class_name === classFilter).length / PAGE_SIZE)),
+  (page - 1) * PAGE_SIZE,
+  Math.min(PAGE_SIZE, students.filter(x => !classFilter || x.class_name === classFilter).length - (page - 1) * PAGE_SIZE)
+); }
+
 function renderPager(total, totalPages, start, shown) {
   const box = $('#studentPager');
   if (!box) return;
@@ -209,6 +228,7 @@ function renderPager(total, totalPages, start, shown) {
     <span class="small muted">
       共 ${total} 人${classFilter ? '（' + esc(classFilter) + '）' : ''}，第 ${page} / ${totalPages} 页
       ${shown ? `，本页显示第 ${start + 1}–${start + shown} 人` : ''}
+      ${selected.size ? `　<b>已选 ${selected.size} 人</b>` : ''}
     </span>
     <button class="btn sm" data-page="prev" ${page <= 1 ? 'disabled' : ''}>上一页</button>
     <button class="btn sm" data-page="next" ${page >= totalPages ? 'disabled' : ''}>下一页</button>`;
@@ -606,7 +626,7 @@ async function onImportFiles(ev) {
 
 /* ---------------------------------------------------------------- 批量删除 */
 async function deleteSelectedStudents() {
-  const ids = [...document.querySelectorAll('#studentTable input[data-sel]:checked')].map(c => Number(c.dataset.sel));
+  const ids = [...selected];
   if (!ids.length) return toast('请先勾选要删除的学生', 'warn');
   const names = students.filter(s => ids.includes(s.id)).map(s => `${s.name || ''}(${s.student_no || s.username})`);
   const okDel = await confirmBox('删除学生', `将删除选中的 ${ids.length} 名学生及其全部记录（练习、成绩、提问），不可恢复：\n\n${names.slice(0, 8).join('、')}${names.length > 8 ? ' 等' : ''}`);
@@ -614,6 +634,7 @@ async function deleteSelectedStudents() {
   try {
     const r = await api('/api/teacher/students/delete', { method: 'POST', body: { ids } });
     toast(`已删除 ${r.deleted || ids.length} 名学生`, 'ok');
+    selected.clear();
     page = 1;
     await loadStats(true);
   } catch (e) { toast('删除失败：' + e.message, 'err'); }
