@@ -178,7 +178,23 @@ textarea:focus, .import-box:focus { border-color: var(--primary); box-shadow: 0 
 #view-scope { grid-template-columns: minmax(0, 1fr) 340px; }
 #view-report { grid-template-columns: minmax(0, 1fr) 340px; }
 #view-qa { grid-template-columns: 340px minmax(0, 1fr); }
-#view-teacher { grid-template-columns: minmax(0, 1fr) 400px; }
+/*
+ * 教师后台：整页纵向滚动，模块按内容自然展开。
+ * 早先是两列固定网格 + 每个面板内部再滚动，导致模块被压得很窄、
+ * 信息要在小格子里上下翻——这里改为"页面滚动、面板不裁切"。
+ */
+#view-teacher {
+  display: block;
+  overflow-y: auto;
+  padding: 10px 14px 24px;
+}
+#view-teacher .panel { margin-bottom: 14px; }
+#view-teacher .table-wrap { overflow: visible; max-height: none; }
+#view-teacher .panel-head { margin-top: 4px; }
+
+/* 分页条 */
+.pager { display: flex; align-items: center; gap: 8px; justify-content: flex-end; padding: 8px 2px 2px; }
+.pager .small { margin-right: auto; }
 /* ---------------------------------------------------------------- 实验任务 / 成绩册 */
 #view-manage { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 #view-grade { grid-template-columns: minmax(0, .85fr) minmax(0, 1.55fr); }

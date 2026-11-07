@@ -1165,6 +1165,71 @@ route('GET', '/api/teacher/assignments/:id/progress', async (req, res, params) =
   });
 });
 
+/* ---------------- 学情明细：某个学生的修改/仿真记录 + 是否在实验窗口内 ----------------
+ * 教师最想知道的两件事：
+ *   1. 这个学生到底写了什么、改了哪版（每次编译都留了完整代码）；
+ *   2. 这些操作是在"教师规定的实验时间内"完成的，还是课外自己练的。
+ * 因此把 attempts（代码+结果）与 assignments（时间窗）对齐后一起返回。
+ */
+route('GET', '/api/teacher/students/:id/activity', async (req, res, params) => {
+  const u = requireRole(req, res, 'teacher'); if (!u) return;
+  const sid = Number(params.id);
+  const st = db.sql.prepare("SELECT id,username,name,class_name,student_no FROM users WHERE id=? AND role='student'").get(sid);
+  if (!st) return sendJSON(res, 404, { error: '学生不存在' });
+
+  const q = new URL(req.url, 'http://x').searchParams;
+  const limit = Math.max(1, Math.min(200, Number(q.get('limit') || 50)));
+
+  const attempts = db.sql.prepare(`SELECT problem_id,kind,ok,code,message,created_at
+    FROM attempts WHERE user_id=? ORDER BY id DESC LIMIT ?`).all(sid, limit);
+
+  const asg = db.sql.prepare('SELECT * FROM assignments ORDER BY id DESC').all();
+  const evs = db.sql.prepare('SELECT assignment_id,kind,at FROM assignment_events WHERE user_id=?').all(sid);
+  const evOf = new Map();
+  for (const e of evs) {
+    if (!evOf.has(e.assignment_id)) evOf.set(e.assignment_id, {});
+    const m = evOf.get(e.assignment_id);
+    if (!m[e.kind]) m[e.kind] = e.at;
+  }
+
+  const ts2 = (s) => toDate(s) ? toDate(s).getTime() : null;
+  /** 该时间点落在哪个实验任务的窗口内；返回任务标题，否则 null（= 课外练习） */
+  const windowOf = (problemId, at) => {
+    const t = ts2(at); if (!t) return null;
+    for (const a of asg) {
+      if (problemId && a.problem_id !== problemId) continue;
+      const s0 = ts2(a.start_at), e0 = ts2(a.end_at);
+      if (s0 && t < s0) continue;
+      if (e0 && t > e0) continue;
+      if (!s0 && !e0) continue;   // 无窗口的任务不用于判定
+      return { id: a.id, title: a.title };
+    }
+    return null;
+  };
+
+  sendJSON(res, 200, {
+    student: { id: st.id, username: st.username, name: st.name, className: st.class_name, studentNo: st.student_no },
+    assignments: asg.map(a => {
+      const m = evOf.get(a.id) || {};
+      return {
+        id: a.id, title: a.title, problemId: a.problem_id,
+        startAt: a.start_at || '', endAt: a.end_at || '',
+        openedAt: m.open || null, submittedAt: m.submit || null,
+        minutes: m.open && m.submit ? minutesBetween(m.open, m.submit, a.start_at, a.end_at) : null
+      };
+    }),
+    timeline: attempts.map(a => {
+      const win = windowOf(a.problem_id, a.created_at);
+      return {
+        at: a.created_at, kind: a.kind || 'compile', ok: !!a.ok,
+        problemId: a.problem_id || '', message: a.message || '',
+        inWindow: !!win, windowTitle: win ? win.title : '',
+        code: String(a.code || '').slice(0, 6000)
+      };
+    })
+  });
+});
+
 /* 高频编译错误统计 */
 route('GET', '/api/teacher/errors', async (req, res) => {
   const u = requireRole(req, res, 'teacher'); if (!u) return;

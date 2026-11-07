@@ -109,7 +109,7 @@
         <div class="panel-head">
           <h2>实验题目</h2>
           <div class="row">
-            <input id="problemSearch" class="input" placeholder="搜索题目 / 章节…">
+            <input id="problemSearch" class="input" name="problem-q" autocomplete="off" data-lpignore="true" spellcheck="false" placeholder="搜索题目 / 章节…">
           </div>
         </div>
         <div id="problemList" class="problem-list"></div>
@@ -151,7 +151,7 @@
     <section class="view hidden" id="view-circuit">
       <div class="panel palette-panel">
         <div class="panel-head"><h2>元件库</h2></div>
-        <input id="partSearch" class="input" placeholder="搜索元件…">
+        <input id="partSearch" class="input" name="part-q" autocomplete="off" data-lpignore="true" spellcheck="false" placeholder="搜索元件…">
         <div id="palette" class="palette"></div>
       </div>
       <div class="panel flex1">
@@ -379,10 +379,12 @@
             <select id="classFilter" class="input sm"></select>
             <button class="btn sm" id="btnRefreshStats">刷新</button>
             <button class="btn sm" id="btnExportCsv">导出 CSV</button>
+            <button class="btn sm" id="btnDeleteSelected">删除选中</button>
           </div>
         </div>
         <div id="statsCards" class="stat-cards"></div>
         <div class="table-wrap"><table id="studentTable" class="data-table"></table></div>
+        <div id="studentPager" class="pager"></div>
         <div class="panel-head"><h2>AI 知识库</h2>
           <div class="row">
             <button class="btn sm" id="btnKbPaste">粘贴录入</button>
@@ -425,7 +427,16 @@
       </div>
       <div class="panel">
         <div class="panel-head"><h2>批量导入学生</h2></div>
-        <div class="small muted">支持 CSV / TSV / 空格分隔。列名可用：学号,姓名,班级,初始密码（密码列可省略，默认 123456）。</div>
+        <div class="small muted">
+          支持 <b>CSV / TSV / TXT</b> 文件，也可直接粘贴。列名可用：学号,姓名,班级,初始密码（密码列可省略，默认 123456）。<br>
+          <span class="muted">PDF、Excel 请先另存为 CSV 再导入（浏览器无法可靠解析这两种二进制格式）。</span>
+        </div>
+        <div class="row wrap" style="margin:6px 0">
+          <label class="btn sm" style="margin:0;cursor:pointer">选择文件（CSV/TXT）
+            <input type="file" id="importFile" accept=".csv,.tsv,.txt,text/csv,text/plain" multiple style="display:none">
+          </label>
+          <span class="small muted" id="importFileName"></span>
+        </div>
         <textarea id="importText" class="import-box" placeholder="学号,姓名,班级,初始密码
 2026001,张三,自动化2601,123456
 2026002,李四,自动化2601,123456"></textarea>

@@ -3,15 +3,37 @@
  * 班级-学生批量导入、学情监测（练习次数/通过率/提问）、单生密码重置、
  * AI 学情分析、大模型与平台设置、学生提问处理。
  */
-import { $, el, api, state, toast, esc, md, modal, closeModal, confirmBox, promptBox } from './core.js';
+import { $, $$, el, api, state, toast, esc, md, modal, closeModal, confirmBox, promptBox } from './core.js';
 
 let students = [], classes = [], stats = null, classFilter = '';
+// 学生名单分页：默认每页 20 人，避免一次性渲染上百行把页面撑爆
+let page = 1;
+const PAGE_SIZE = 20;
 let tq = [];
 
 export function init() {
   $('#btnRefreshStats').addEventListener('click', () => loadStats(true));
-  $('#classFilter').addEventListener('change', () => { classFilter = $('#classFilter').value; renderTable(); });
+  $('#classFilter').addEventListener('change', () => { classFilter = $('#classFilter').value; page = 1; renderTable(); });
+  const pager = $('#studentPager');
+  if (pager) pager.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-page]');
+    if (!b) return;
+    const to = b.dataset.page;
+    const rows = students.filter(s => !classFilter || s.class_name === classFilter);
+    const max = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+    page = to === 'prev' ? Math.max(1, page - 1) : Math.min(max, page + 1);
+    renderTable();
+  });
+  const impFile = $('#importFile');
+  if (impFile) impFile.addEventListener('change', onImportFiles);
   $('#btnExportCsv').addEventListener('click', exportCsv);
+  $('#btnDeleteSelected').addEventListener('click', deleteSelectedStudents);
+  $('#studentTable').addEventListener('change', (e) => {
+    if (e.target.id === 'chkAllStudents') {
+      const on = e.target.checked;
+      $$('#studentTable input[data-sel]').forEach(c => { c.checked = on; });
+    }
+  });
   $('#btnAnalyzeClass').addEventListener('click', analyze);
   const be = $('#btnRefreshErrors'); if (be) be.addEventListener('click', () => loadErrors(true));
   // AI 知识库
@@ -140,18 +162,25 @@ function renderTable() {
   const tb = $('#studentTable');
   const rows = students.filter(s => !classFilter || s.class_name === classFilter);
   const stMap = new Map((stats?.students || []).map(s => [s.id, s]));
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  if (page > totalPages) page = totalPages;
+  const start = (page - 1) * PAGE_SIZE;
+  const view = rows.slice(start, start + PAGE_SIZE);
   tb.innerHTML = `
     <thead><tr>
+      <th style="width:26px"><input type="checkbox" id="chkAllStudents" title="全选本页"></th>
       <th>学号</th><th>姓名</th><th>班级</th>
       <th style="text-align:right">练习</th><th style="text-align:right">通过</th>
       <th style="width:110px">完成实验</th><th style="text-align:right">提问</th>
       <th>最近活动</th><th>状态</th><th>操作</th>
     </tr></thead>
-    <tbody>${rows.map(s => {
+    <tbody>${view.map(s => {
       const x = stMap.get(s.id) || {};
       const solved = x.solved || 0;
       const pct = Math.min(100, Math.round(solved / 15 * 100));
       return `<tr>
+        <td><input type="checkbox" data-sel="${s.id}"></td>
         <td>${esc(s.student_no || s.username)}</td>
         <td>${esc(s.name || '')}</td>
         <td>${esc(s.class_name || '')}</td>
@@ -162,12 +191,27 @@ function renderTable() {
         <td class="small">${x.last_attempt ? fmtShort(x.last_attempt) : (s.last_login ? fmtShort(s.last_login) : '—')}</td>
         <td>${s.active ? '<span class="tag basic">正常</span>' : '<span class="tag">停用</span>'}</td>
         <td>
+          <button class="btn sm" data-act="detail" data-id="${s.id}">详情</button>
           <button class="btn sm" data-act="pwd" data-id="${s.id}">改密</button>
           <button class="btn sm" data-act="toggle" data-id="${s.id}">${s.active ? '停用' : '启用'}</button>
         </td>
       </tr>`;
     }).join('')}</tbody>`;
-  if (!rows.length) tb.innerHTML = '<tbody><tr><td colspan="10" class="empty">还没有学生。请在右侧「批量导入学生」中粘贴名单。</td></tr></tbody>';
+  if (!rows.length) tb.innerHTML = '<tbody><tr><td colspan="11" class="empty">还没有学生。请在下方「批量导入学生」中导入名单。</td></tr></tbody>';
+  renderPager(rows.length, totalPages, start, view.length);
+}
+
+function renderPager(total, totalPages, start, shown) {
+  const box = $('#studentPager');
+  if (!box) return;
+  if (!total) { box.innerHTML = ''; return; }
+  box.innerHTML = `
+    <span class="small muted">
+      共 ${total} 人${classFilter ? '（' + esc(classFilter) + '）' : ''}，第 ${page} / ${totalPages} 页
+      ${shown ? `，本页显示第 ${start + 1}–${start + shown} 人` : ''}
+    </span>
+    <button class="btn sm" data-page="prev" ${page <= 1 ? 'disabled' : ''}>上一页</button>
+    <button class="btn sm" data-page="next" ${page >= totalPages ? 'disabled' : ''}>下一页</button>`;
 }
 
 function fmtShort(t) {
@@ -183,6 +227,7 @@ async function onTableClick(e) {
   const id = Number(btn.dataset.id);
   const stu = students.find(s => s.id === id);
   if (!stu) return;
+  if (btn.dataset.act === 'detail') { showStudentActivity(Number(btn.dataset.id)); return; }
   if (btn.dataset.act === 'pwd') {
     const r = await promptBox('重置学生密码', [
       { name: 'pwd', label: `${stu.name || stu.username} 的新密码`, value: '123456' }
@@ -530,4 +575,106 @@ async function saveWebSearch() {
     toast('联网搜索设置已保存', 'ok');
     loadWebSearchCfg();
   } catch (e) { toast('保存失败：' + e.message, 'err'); }
+}
+
+/* ---------------------------------------------------------------- 文件导入
+ * 支持 CSV / TSV / TXT：浏览器读成文本后并入导入框，走同一套解析。
+ * PDF / XLSX 是二进制或压缩包格式，纯前端解析不可靠，明确提示用户另存为 CSV。
+ */
+async function onImportFiles(ev) {
+  const files = [...(ev.target.files || [])];
+  if (!files.length) return;
+  const parts = [];
+  let failed = 0;
+  for (const f of files) {
+    try {
+      let text = await f.text();
+      text = text.replace(/^\uFEFF/, '');      // 去 BOM，Excel 导出的 CSV 常见
+      if (!text.trim()) continue;
+      parts.push(text.trim());
+    } catch { failed++; }
+  }
+  const ta = $('#importText');
+  const merged = parts.join('\n');
+  if (merged) ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + merged;
+  const lines = merged.split(/\r?\n/).filter(l => l.trim()).length;
+  $('#importFileName').textContent =
+    `已读入 ${files.length - failed} 个文件，共 ${lines} 行` + (failed ? `，${failed} 个读取失败` : '');
+  ev.target.value = '';
+  toast('文件已读入，请确认右侧内容后点「导入」', 'ok');
+}
+
+/* ---------------------------------------------------------------- 批量删除 */
+async function deleteSelectedStudents() {
+  const ids = [...document.querySelectorAll('#studentTable input[data-sel]:checked')].map(c => Number(c.dataset.sel));
+  if (!ids.length) return toast('请先勾选要删除的学生', 'warn');
+  const names = students.filter(s => ids.includes(s.id)).map(s => `${s.name || ''}(${s.student_no || s.username})`);
+  const okDel = await confirmBox('删除学生', `将删除选中的 ${ids.length} 名学生及其全部记录（练习、成绩、提问），不可恢复：\n\n${names.slice(0, 8).join('、')}${names.length > 8 ? ' 等' : ''}`);
+  if (!okDel) return;
+  try {
+    const r = await api('/api/teacher/students/delete', { method: 'POST', body: { ids } });
+    toast(`已删除 ${r.deleted || ids.length} 名学生`, 'ok');
+    page = 1;
+    await loadStats(true);
+  } catch (e) { toast('删除失败：' + e.message, 'err'); }
+}
+
+/* ---------------------------------------------------------------- 学情明细
+ * 教师视角要回答两个问题：
+ *   1) 这个学生具体写了什么、改到哪一版（每次编译都含完整代码）；
+ *   2) 这些操作发生在"规定实验时间内"还是课外自主练习。
+ * 后端把 attempts 与 assignments 的时间窗对齐后返回。
+ */
+async function showStudentActivity(id) {
+  const st = students.find(s => s.id === id) || {};
+  const wrap = el('div', { class: 'md' });
+  wrap.innerHTML = '<p class="muted small">加载中…</p>';
+  modal(`学情明细 · ${st.name || st.username || ''}`, wrap, [{ label: '关闭', primary: true }]);
+  let d;
+  try {
+    d = await api(`/api/teacher/students/${id}/activity?limit=50`);
+  } catch (e) {
+    wrap.innerHTML = '<p class="muted">加载失败：' + esc(e.message) + '</p>';
+    return;
+  }
+
+  const stu = d.student || {};
+  const asgs = (d.assignments || []).filter(a => a.startAt || a.endAt || a.openedAt || a.submittedAt);
+  const asgRows = asgs.map(a => {
+    const state = a.submittedAt ? '已提交' : (a.openedAt ? '进行中' : '未参与');
+    return `<tr>
+      <td>${esc(a.title)}</td>
+      <td class="small">${esc(a.startAt || '不限')} ~ ${esc(a.endAt || '不限')}</td>
+      <td class="small">${a.openedAt ? esc(a.openedAt) : '—'}</td>
+      <td class="small">${a.submittedAt ? esc(a.submittedAt) : '—'}</td>
+      <td class="small">${a.minutes != null ? a.minutes + ' 分钟' : '—'}</td>
+      <td>${state}</td>
+    </tr>`;
+  }).join('');
+
+  const tl = (d.timeline || []).map((t, i) => {
+    const where = t.inWindow
+      ? `<span class="tag basic">课内 · ${esc(t.windowTitle)}</span>`
+      : '<span class="tag">课外练习</span>';
+    const result = t.ok ? '<span class="tag basic">成功</span>' : '<span class="tag" style="background:#fdecea;color:#b3261e">失败</span>';
+    const err = !t.ok && t.message ? `<div class="small" style="color:#b3261e;margin-top:2px">${esc(t.message.slice(0, 200))}</div>` : '';
+    return `<div style="border-bottom:1px solid #eef1f5;padding:6px 0">
+      <div class="row" style="gap:8px;align-items:center">
+        <span class="small muted" style="width:132px">${esc(t.at)}</span>
+        <span class="small" style="width:56px">${t.kind === 'compile' ? '编译' : esc(t.kind)}</span>
+        ${result}<span class="small muted">${esc(t.problemId || '')}</span>${where}
+      </div>
+      ${err}
+      ${t.code ? `<details><summary class="small muted" style="cursor:pointer">查看当时的代码</summary>
+        <pre class="small" style="white-space:pre-wrap;max-height:220px;overflow:auto;margin:4px 0 0">${esc(t.code)}</pre></details>` : ''}
+    </div>`;
+  }).join('') || '<p class="muted small">这个学生还没有编译/仿真记录。</p>';
+
+  wrap.innerHTML = `
+    <p class="small muted">${esc(stu.name || '')}　${esc(stu.studentNo || stu.username || '')}　${esc(stu.className || '')}</p>
+    <h4 style="margin:10px 0 4px">作业参与</h4>
+    ${asgRows ? `<table class="data-table"><thead><tr><th>任务</th><th>时间窗口</th><th>开始</th><th>提交</th><th>用时</th><th>状态</th></tr></thead><tbody>${asgRows}</tbody></table>`
+      : '<p class="muted small">暂无实验任务记录。</p>'}
+    <h4 style="margin:14px 0 4px">最近操作（含代码快照，最多 50 条）</h4>
+    <div>${tl}</div>`;
 }

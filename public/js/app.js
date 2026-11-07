@@ -93,25 +93,20 @@ async function boot() {
     applySiteInfo(info);
   } catch (e) { /* 服务未就绪时也允许渲染登录页 */ }
 
-  try {
-    const me = await api('/api/me');
-    if (me && me.user) { cacheUser(me.user); return enterApp(me.user); }
-  } catch (e) {
-    /*
-     * 离线恢复：断网时无法向服务端校验会话，但学生可能正在做实验。
-     * 只要本地存有上次登录身份，就以"离线模式"直接进入应用，
-     * 让他继续画图/仿真；编译与提交会给出"需要联网"的明确提示。
-     */
-    const cached = readCachedUser();
-    if ((e && e.offline) || navigator.onLine === false) {
-      if (cached) {
-        // 注意：浏览器有时在断网瞬间仍报告 navigator.onLine=true，
-        // 因此这里必须显式置位，提示条才会出现。
-        state.offline = true;
-        toast('离网模式：可继续画图与仿真，编译/提交需联网', 'warn', 5000);
-        return enterApp(cached, { offline: true });
-      }
-    }
+  /*
+   * 自动进入的判定依据是 **sessionStorage**（按标签页隔离），不是服务端会话：
+   *   · 同一标签页刷新 → sessionStorage 还在 → 直接进入，实验进度不丢；
+   *   · 关掉标签页再开新的 → sessionStorage 已随标签页销毁 → 要求重新登录。
+   * 这样既避免"新开标签页就顶着别人的账号进后台"，又不至于刷新一下就掉线。
+   * 账号密码仍由浏览器密码管理器自动填充（表单 autocomplete 未改动）。
+   */
+  const tabAuthed = (() => { try { return sessionStorage.getItem('mculab.tabAuthed') === '1'; } catch { return false; } })();
+  if (tabAuthed) {
+    try {
+      const me = await api('/api/me');
+      if (me && me.user) { cacheUser(me.user); return enterApp(me.user); }
+    } catch { /* 会话已失效：回落到登录页 */ }
+    try { sessionStorage.removeItem('mculab.tabAuthed'); } catch { }
   }
 
   $('#authView').classList.remove('hidden');
@@ -176,6 +171,19 @@ function applySiteInfo(info) {
     }
   }
 }
+
+/* ================================================================ 离开确认
+ * 登录后启用：误点关闭标签页/刷新时浏览器会弹出确认框，避免实验做到一半丢失。
+ * 退出登录时解除，避免"想走又被拦"。
+ */
+let unloadGuard = false;
+function armUnloadGuard(on) { unloadGuard = !!on; }
+window.addEventListener('beforeunload', (e) => {
+  if (!unloadGuard) return;
+  e.preventDefault();
+  e.returnValue = '';
+  return '';
+});
 
 /* ================================================================ 登录 / 注册 */
 /* 登录/注册的内联错误提示：比一闪而过的 toast 可靠得多 */
@@ -309,6 +317,8 @@ function bindAuth() {
   });
 
   $('#btnLogout').addEventListener('click', async () => {
+    armUnloadGuard(false);
+    try { sessionStorage.removeItem('mculab.tabAuthed'); } catch { }
     try { await api('/api/auth/logout', { method: 'POST' }); } catch { }
     location.reload();
   });
@@ -356,6 +366,8 @@ function bindAuth() {
 /* ================================================================ 进入应用 */
 async function enterApp(user, opts = {}) {
   state.user = user;
+  try { sessionStorage.setItem('mculab.tabAuthed', '1'); } catch { }
+  armUnloadGuard(true);
   $('#authView').classList.add('hidden');
   $('#appView').classList.remove('hidden');
   $('#rolePill').textContent = user.role === 'teacher' ? '教师' : '学生';
