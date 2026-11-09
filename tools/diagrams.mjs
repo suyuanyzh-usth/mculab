@@ -8,7 +8,7 @@
 
 export const archSvg = `<svg viewBox="0 0 680 372" width="100%" role="img" xmlns="http://www.w3.org/2000/svg">
 <title>软件架构图</title>
-<desc>蓝白多色架构图：前端蓝、服务端青绿紫、数据灰、外部橙，仿真内核实心蓝突出。</desc>
+<desc>蓝白多色架构图，前端蓝、服务端青绿紫、数据灰、外部橙，仿真内核实心蓝突出。</desc>
 <defs>
 <marker id="mA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
 <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -74,13 +74,13 @@ export const archSvg = `<svg viewBox="0 0 680 372" width="100%" role="img" xmlns
 
 <rect x="40" y="288" width="600" height="62" rx="6" fill="#F4F9FF" stroke="#9CC3E8" stroke-width="1"/>
 <rect x="40" y="288" width="5" height="62" rx="2.5" fill="#2F6DB5"/>
-<text x="60" y="308" font-family="Microsoft YaHei, sans-serif" font-size="13" font-weight="700" fill="#12345A" dominant-baseline="central">设计要点：仿真在浏览器本地执行，服务端只承担编译与鉴权</text>
+<text x="60" y="308" font-family="Microsoft YaHei, sans-serif" font-size="13" font-weight="700" fill="#12345A" dominant-baseline="central">设计要点　仿真在浏览器本地执行，服务端只承担编译与鉴权</text>
 <text x="60" y="330" font-family="Microsoft YaHei, sans-serif" font-size="12" fill="#4A6B8A" dominant-baseline="central">这是百人同时在线仍能流畅使用的关键；编译与模型调用按需远程，其余全部在本地完成</text>
 </svg>`;
 
 export const flowSvg = `<svg viewBox="0 0 680 358" width="100%" role="img" xmlns="http://www.w3.org/2000/svg">
 <title>学生实验流程图</title>
-<desc>按阶段着色的实验流程：输入蓝、编译绿、仿真青、报告紫、提交实心蓝。</desc>
+<desc>按阶段着色的实验流程，输入蓝、编译绿、仿真青、报告紫、提交实心蓝。</desc>
 <defs>
 <marker id="mF" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
 <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -135,6 +135,6 @@ export const flowSvg = `<svg viewBox="0 0 680 358" width="100%" role="img" xmlns
 
 <rect x="40" y="286" width="600" height="54" rx="6" fill="#F4F9FF" stroke="#9CC3E8" stroke-width="1"/>
 <rect x="40" y="286" width="5" height="54" rx="2.5" fill="#2F6DB5"/>
-<text x="60" y="304" font-family="Microsoft YaHei, sans-serif" font-size="12" font-weight="700" fill="#12345A" dominant-baseline="central">编译失败不中断流程：回到编辑器并定位到出错行号，改完重新编译即可</text>
+<text x="60" y="304" font-family="Microsoft YaHei, sans-serif" font-size="12" font-weight="700" fill="#12345A" dominant-baseline="central">编译失败不中断流程，回到编辑器并定位到出错行号，改完重新编译即可</text>
 <text x="60" y="324" font-family="Microsoft YaHei, sans-serif" font-size="12" fill="#4A6B8A" dominant-baseline="central">仿真与测量全程在浏览器本地完成，不占用服务端资源</text>
 </svg>`;
